@@ -1,17 +1,25 @@
 #include <Tiny85_TLC5940.h>
-#define TICK 50
+#define TICK 700
 #define WIDTH 3
 #define HEIGHT 5
+
+int lives = 3;
+int pos = 1;
 
 unsigned long last_tick;
 
 int key_stroke = 0; //0 = nothing, 1 = left, 2 = up, 3 = right
+int last_stroke = 0;
+unsigned long last_press = 0;
+int debounce_delay = 40;
 
 short mapping[] = {15, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 14};
 
 bool frame[HEIGHT][WIDTH];
 
 bool frame_buffer[HEIGHT][WIDTH];
+
+bool buffer_ready = false;
 
 void setup() {
   tlc5940.init();
@@ -23,14 +31,29 @@ void setup() {
 
 void loop () {
   if (millis() - last_tick < TICK) {
+    if(!buffer_ready){
+        update();
+    }
+    if(keyPressed()) {
+      //move
+      last_tick = millis();
+      refreshBuffer();
+    }
     paint();
   } else {
+    if(buffer_ready){
+      refreshBuffer();
+      buffer_ready = false;
+    }
     last_tick = millis();
-    refreshBuffer();
     paint();
   }
 }
-
+void update() {
+  //move everything down
+  //update top row
+  buufer_ready = true;
+}
 void paint() {
   for (int i = 0 ; i < HEIGHT; i++) {
     for (int j = 0 ; j < WIDTH; j++) {
@@ -42,6 +65,19 @@ void paint() {
     }
   }
   tlc5940.update();
+}
+void setFrameBuffer(int x, int y, bool state) {
+  if(valid(x,y)){
+    frame_buffer[x][y] = state;
+  }
+}
+
+void clearFrameBuffer() {
+    for (int i = 0 ; i < HEIGHT; i++) {
+    for (int j = 0 ; j < WIDTH; j++) {
+      frame_buffer[i][j] = false;
+    }
+  }
 }
 void refreshBuffer() {
   for (int i = 0 ; i < HEIGHT; i++) {
@@ -81,5 +117,19 @@ int buttonStatus() {
       key = 3;
   }
   return key;
+}
+
+bool keyPressed() {
+  int reading = buttonStatus();
+  if (reading != last_stroke) {
+    last_press = millis();
+  }
+  if ((millis() - last_press) > debounce_delay) {
+    if (reading != key_stroke) {
+      key_stroke = reading;
+      return true;
+    }
+  }
+  return false;
 }
 
