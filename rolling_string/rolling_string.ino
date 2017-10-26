@@ -1,10 +1,9 @@
 #include <Tiny85_TLC5940.h>
+#include <EEPROM.h>
 #define TICK 2000
 #define WIDTH 3
 #define HEIGHT 5
 #define BRIGHTNESS 200
-
-#include <ascii_matrix.h>
 
 char str[] = "ROBERT";
 int lives = 3;
@@ -54,16 +53,32 @@ void loop () {
   }
 }
 void update() {
-  count = count%22;
-    for (int i = 0 ; i < HEIGHT; i++) {
-    for (int j = 0 ; j < WIDTH; j++) {
-      frame_buffer[i][j] = capitals[count][i][j];
-    }
+  count = count%26;
+  
+  static bool letter_array[5][3];
+  byte letter[2];
+  byte address = 2 * count;
+
+  letter[0] = EEPROM.read(address);
+  letter[1] = EEPROM.read(address+1);
+
+  for (byte i = 0;i<15;i++){
+    byte current = letter[i/8];
+    current = current >> (7-i%8-i/8);
+    letter_array[i/3][i%3] = !current%2==0;
   }
+  
+
+    for (int i = 0 ; i < HEIGHT; i++) {
+      for (int j = 0 ; j < WIDTH; j++) {
+        frame_buffer[i][j] = letter_array[i][j];
+      }
+    }
   count++;
   
   buffer_ready = true;
 }
+
 void paint() {
   for (int i = 0 ; i < HEIGHT; i++) {
     for (int j = 0 ; j < WIDTH; j++) {
