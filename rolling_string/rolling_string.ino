@@ -1,6 +1,6 @@
 #include <Tiny85_TLC5940.h>
 #include <EEPROM.h>
-#define TICK 2000
+#define TICK 400
 #define WIDTH 3
 #define HEIGHT 5
 #define BRIGHTNESS 200
@@ -64,8 +64,8 @@ void update() {
 
   for (byte i = 0;i<15;i++){
     byte current = letter[i/8];
-    current = current >> (7-i%8-i/8);
-    letter_array[i/3][i%3] = !current%2==0;
+    current = current >> (7-(i%8)-(i/8));
+    letter_array[i/3][i%3] = !((current%2)==0);
   }
   
 
