@@ -1,5 +1,5 @@
 #include <Tiny85_TLC5940.h>
-#define TICK 700
+#define TICK 1000
 #define WIDTH 3
 #define HEIGHT 5
 
@@ -12,6 +12,8 @@ int key_stroke = 0; //0 = nothing, 1 = left, 2 = up, 3 = right
 int last_stroke = 0;
 unsigned long last_press = 0;
 int debounce_delay = 40;
+
+bool last_row[3];
 
 short mapping[] = {15, 13, 12,
                    11, 10, 9, 
@@ -54,7 +56,7 @@ void loop () {
   }
 }
 void update() {
-  long rand = random(0, 12);
+  long rand = random(0, 5);
   bool row[3] = {false, false, false};
   switch (rand) {
     case 0:
@@ -83,7 +85,22 @@ void update() {
       row[2] = true;
       break;
   }
+  bool dead_end = true;
+  for(byte i =0;i<3;i++){
+    if(last_row[i] == false && row[i]==false){
+        dead_end = false;
+    }
+  }
 
+  if(dead_end){
+      row[0] = false;
+      row[1] = false;
+      row[2] = false;
+  }
+
+  for(byte i =0;i<3;i++){
+    last_row[i] = row[i];
+  }
   for (int y = HEIGHT - 2; y >= 0; y--) {
     for (int x = 0; x < 3; x++) {
       if (valid(x, y + 1) && valid(x, y)) {
